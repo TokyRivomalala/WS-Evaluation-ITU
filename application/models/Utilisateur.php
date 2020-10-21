@@ -83,11 +83,11 @@
 
                 $sql = "SELECT * from utilisateur WHERE nom like '".$nom."' AND datenaiss ".$dateNaiss." AND email LIKE '".$email."'".$orderBy." ".$order." limit ".$limit." offset ".$offset;
                 $res = $this->db->query($sql);
-                if(sizeof($res) == 0){
+                $result = $res->result_array();
+                if(sizeof($result) == 0){
                     throw new Exception("Aucun utilisateur trouve");
                 }
                 else{
-                    $result = $res->result_array();
                     $test = array('sql' => $sql);
                     return $result;
                 }
@@ -115,11 +115,11 @@
 
                 $sql = "SELECT * from utilisateur WHERE nom like '".$nom."' AND datenaiss ".$dateNaiss." AND email LIKE '".$email."'".$orderBy." ".$order;
                 $res = $this->db->query($sql);
-                if(sizeof($res) == 0){
+                $result = $res->result_array();
+                if(sizeof($result) == 0){
                     throw new Exception("Aucun utilisateur trouve");
                 }
                 else{
-                    $result = $res->result_array();
                     $test = array('sql' => $sql);
                     return $result;
                 }
