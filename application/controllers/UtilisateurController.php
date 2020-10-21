@@ -6,9 +6,6 @@
             header("Access-Control-Allow-Headers:Content-Type");
             header("Access-Control-Allow-Methods:GET,POST,OPTIONS,PUT,DELETE");
             $method=$_SERVER['REQUEST_METHOD'];
-            if($method=="OPTIONS"){
-                die();
-            }
         }
 
         public function checkLogin(){
