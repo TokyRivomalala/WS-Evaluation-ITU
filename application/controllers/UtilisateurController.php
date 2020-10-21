@@ -1,13 +1,6 @@
 <?php
     class UtilisateurController extends CI_Controller{
 
-        public function __construct(){
-            header("Access-Control-Allow-Origin:*");
-            header("Access-Control-Allow-Headers:Content-Type");
-            header("Access-Control-Allow-Methods:GET,POST,OPTIONS,PUT,DELETE");
-            $method=$_SERVER['REQUEST_METHOD'];
-        }
-
         public function checkLogin(){
             $email = $this->input->post('email');
             $mdp = $this->input->post('mdp');
