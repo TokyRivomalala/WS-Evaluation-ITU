@@ -78,7 +78,7 @@
         }
 
         public function getTokenExpiration(){
-            $expiration = date('Y-m-d H:i:s', strtotime(Fonction::$now . ' +2 minutes'));
+            $expiration = date('Y-m-d H:i:s', strtotime(Fonction::$now . ' +30 minutes'));
             Fonction::$now = null;
             return $expiration;
         }
