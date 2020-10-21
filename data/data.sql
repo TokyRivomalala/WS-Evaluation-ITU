@@ -2,12 +2,12 @@
 /* Nom de SGBD :  PostgreSQL 8                                  */
 /* Date de cr�ation :  19/10/2020 09:34:37                      */
 /*==============================================================*/
-CREATE DATABASE evaluation WITH OWNER toky;
-GRANT ALL PRIVILEGES ON DATABASE evaluation TO toky;
+-- CREATE DATABASE evaluation WITH OWNER toky;
+-- GRANT ALL PRIVILEGES ON DATABASE evaluation TO toky;
 
-drop table ADMIN;
+-- drop table ADMIN;
 
-drop table UTILISATEUR;
+-- drop table UTILISATEUR;
 
 /*==============================================================*/
 /* Table : ADMIN                                                */
