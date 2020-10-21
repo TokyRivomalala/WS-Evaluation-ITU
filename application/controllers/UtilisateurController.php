@@ -1,5 +1,9 @@
 <?php
+    header('Access-Control-Allow-Origin: *');
+    header("Access-Control-Allow-Methods: GET,POST,DELETE, OPTIONS");
+
     class UtilisateurController extends CI_Controller{
+
 
         public function checkLogin(){
             $email = $this->input->post('email');

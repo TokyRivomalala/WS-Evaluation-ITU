@@ -1,4 +1,8 @@
 <?php
+
+    header('Access-Control-Allow-Origin: *');
+    header("Access-Control-Allow-Methods: GET,POST,DELETE, OPTIONS");
+
     class AdminController extends CI_Controller{
 
         public function checkLogin(){
