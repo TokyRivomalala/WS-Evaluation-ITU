@@ -46,6 +46,20 @@
                 echo $res;
             }   
         }
+
+        public function nouveauDate(){
+            try{
+                $date = $this->input->post('date');
+                $res = $this->Admin->nouveauDate($date);
+                echo $res;
+            }catch(Exception $ex){
+                $erreur = array(
+                    'exception' => $ex->getMessage()
+                );
+                $res = $this->Fonction->toJson('error',$erreur,$message='Erreur de d\'insertion');
+                echo $res;
+            }   
+        }
     }
 
 ?>

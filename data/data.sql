@@ -48,3 +48,9 @@ INSERT INTO UTILISATEUR (IDUTIL,NOM,PRENOM,DATENAISS,EMAIL,SEXE,MDP) VALUES (CON
 INSERT INTO UTILISATEUR (IDUTIL,NOM,PRENOM,DATENAISS,EMAIL,SEXE,MDP) VALUES (CONCAT('UT',lpad(nextval('utilisateur_seq')::text,2,'0')),'Randria','Hasina','01-12-1997','hasina@yahoo.com','Femme','hasina');
 INSERT INTO UTILISATEUR (IDUTIL,NOM,PRENOM,DATENAISS,EMAIL,SEXE,MDP) VALUES (CONCAT('UT',lpad(nextval('utilisateur_seq')::text,2,'0')),'Rasolo','Fetra','01-10-1996','fetra@yahoo.com','Homme','fetra');
 INSERT INTO UTILISATEUR (IDUTIL,NOM,PRENOM,DATENAISS,EMAIL,SEXE,MDP) VALUES (CONCAT('UT',lpad(nextval('utilisateur_seq')::text,2,'0')),'Rafidy','Solo','01-04-1995','solo@yahoo.com','Homme','solo');
+
+create table testDate(
+   date TIMESTAMP
+);
+
+insert into testDate (date) values ('01-01-2000');

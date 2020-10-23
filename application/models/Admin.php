@@ -63,5 +63,21 @@
                 throw $ex;
             }
         }
+
+        public function nouveauDate($date){
+            try{
+                if($this->Fonction->IsNullOrEmptyString($date)){
+                    throw new Exception("Date ne devrait pas etre null");
+                }
+                $util = array(
+                    'date' => $date
+                );
+                $this->db->insert('testdate',$util);
+                return $this->Fonction->toJson('success',$util,'Date insere');  
+            }
+            catch(Exception $ex){
+                throw $ex;
+            }
+        } 
     }
 ?>

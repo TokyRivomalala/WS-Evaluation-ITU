@@ -74,34 +74,12 @@ $active_group = 'default';
 $query_builder = TRUE;
 
 //postgresql local
-// $db['default'] = array(
-// 	'dsn'	=> 'pgsql:host=localhost;port=5432;dbname=evaluation',
-// 	'hostname' => 'localhost',
-// 	'username' => 'toky',
-// 	'password' => '1234',
-// 	'database' => 'evaluation',
-// 	'dbdriver' => 'pdo',
-// 	'dbprefix' => '',
-// 	'pconnect' => FALSE,
-// 	'db_debug' => (ENVIRONMENT !== 'production'),
-// 	'cache_on' => FALSE,
-// 	'cachedir' => '',
-// 	'char_set' => 'utf8',
-// 	'dbcollat' => 'utf8_general_ci',
-// 	'swap_pre' => '',
-// 	'encrypt' => FALSE,
-// 	'compress' => FALSE,
-// 	'stricton' => FALSE,
-// 	'failover' => array(),
-// 	'save_queries' => TRUE
-// );
-
-//postgresql alwaysdata
 $db['default'] = array(
-	'dsn'	=> 'pgsql:host= postgresql-toky.alwaysdata.net;port=5432;dbname=toky_evaluation',
+	'dsn'	=> 'pgsql:host=localhost;port=5432;dbname=evaluation',
+	'hostname' => 'localhost',
 	'username' => 'toky',
-	'password' => 'Rivomalala',
-	'database' => 'toky_evaluation',
+	'password' => '1234',
+	'database' => 'evaluation',
 	'dbdriver' => 'pdo',
 	'dbprefix' => '',
 	'pconnect' => FALSE,
@@ -117,3 +95,25 @@ $db['default'] = array(
 	'failover' => array(),
 	'save_queries' => TRUE
 );
+
+//postgresql alwaysdata
+// $db['default'] = array(
+// 	'dsn'	=> 'pgsql:host= postgresql-toky.alwaysdata.net;port=5432;dbname=toky_evaluation',
+// 	'username' => 'toky',
+// 	'password' => 'Rivomalala',
+// 	'database' => 'toky_evaluation',
+// 	'dbdriver' => 'pdo',
+// 	'dbprefix' => '',
+// 	'pconnect' => FALSE,
+// 	'db_debug' => (ENVIRONMENT !== 'production'),
+// 	'cache_on' => FALSE,
+// 	'cachedir' => '',
+// 	'char_set' => 'utf8',
+// 	'dbcollat' => 'utf8_general_ci',
+// 	'swap_pre' => '',
+// 	'encrypt' => FALSE,
+// 	'compress' => FALSE,
+// 	'stricton' => FALSE,
+// 	'failover' => array(),
+// 	'save_queries' => TRUE
+// );
