@@ -60,6 +60,42 @@
                 echo $res;
             }   
         }
+
+        public function sortArray(){
+            try{
+
+                $array[] = array(
+                    'nom' => 'Toky',
+                    'age' => 21,
+                    'datenaiss' => '01-01-1999'
+                );  
+                $toPush1 = array(
+                    'nom' => 'Fetra',
+                    'age' => 23,
+                    'datenaiss' => '01-01-1997'
+                );
+                $toPush2 = array(
+                    'nom' => 'Balita',
+                    'age' => 19,
+                    'datenaiss' => '01-01-2000'
+                );
+
+                $res = $this->Fonction->pushArray($array,$toPush1);
+                $res = $this->Fonction->pushArray($res,$toPush2);
+                
+                $colonne = 'datenaiss';
+                $res = $this->Fonction->sortArray($res,$colonne,$order = SORT_ASC);
+
+                $res = $this->Fonction->toJson('success',$res,$message='Sort array ok');
+                echo $res;
+            }catch(Exception $ex){
+                $erreur = array(
+                    'exception' => $ex->getMessage()
+                );
+                $res = $this->Fonction->toJson('error',$erreur,$message='Erreur push array');
+                echo $res; 
+            }
+        }
     }
 
 ?>
