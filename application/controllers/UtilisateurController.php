@@ -55,7 +55,7 @@
             $dateDeb = $this->input->get('dateDeb');
             $dateFin = $this->input->get('dateFin');
             try{
-                $limit = 3;
+                $limit = 20;
                 $offset = $this->Fonction->getOffset($currPage,$limit);
 
                 $res = $this->Utilisateur->recherche($dateDeb,$dateFin,$email,$nom,$orderBy,$order,$limit,$offset);
