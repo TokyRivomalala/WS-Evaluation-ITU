@@ -55,7 +55,11 @@
         public function getTicket(){
             try{
                 $res = $this->Achat->getTicket();
-                echo $res;
+                $arr = array(
+                    'ticket' => $res
+                );
+                $val = $this->Fonction->toJson('success',$arr, ' ticket(s) trouvee');
+                echo $val;
             }catch(Exception $ex){
                 $erreur = array(
                     'exception' => $ex->getMessage()

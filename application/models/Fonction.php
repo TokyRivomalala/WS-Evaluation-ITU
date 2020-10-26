@@ -11,6 +11,15 @@
             return json_encode($res);  
         }
 
+        public function toJsonTicket($status='success',$datas=NULL,$ticket,$message=''){
+            $res=array();
+            $res['status']=$status;  
+            $res['datas']=$datas;  
+            $res['ticket'] = $ticket;
+            $res['message']=$message;
+            return json_encode($res);  
+        }
+
         public function getAuthorizationHeader(){
             $headers = null;
             if (isset($_SERVER['Authorization'])) {

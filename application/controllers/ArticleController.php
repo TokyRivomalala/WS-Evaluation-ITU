@@ -38,7 +38,7 @@
 
         public function selectComplet($currPage){
             try{
-                $limit = 2000;
+                $limit = 20000;
                 $offset = $this->Fonction->getOffset($currPage,$limit);
 
                 $res = $this->Article->selectArticle($limit,$offset);

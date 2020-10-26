@@ -169,6 +169,20 @@
             return $result;
         }
 
+        public function ifStockDispo($idArticle,$quantite){
+            try{
+                $sql = "SELECT * from stockarticle WHERE idarticle like '".$idArticle."'";
+                $res = $this->db->query($sql);
+                $result = $res->result_array();
+                $stockActuel = $result[0]['quantitestock'];
+                if($stockActuel < $quantite){
+                    throw new Exception ("Stock epuise");
+                }
+            }catch(Exception $ex){
+                throw $ex;
+            }
+        }
+
         public function modifier($idArticle,$stock){
             try{
                 $util = $this->Admin->checkToken();

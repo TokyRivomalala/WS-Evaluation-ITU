@@ -74,6 +74,7 @@
                 if($quantite <= 0 ){
                     throw new Exception("Quantite invalide");
                 }
+                
                 $article = $this->Article->select($code);
                 //return $this->Fonction->toJson('success',$article,$message='Achat insere');
                 $ifArtExist = sizeof($article);
@@ -82,7 +83,7 @@
                 }
 
                 $idArticle = $article[0]["idarticle"];
-
+                $this->Article->ifStockDispo($idArticle,$quantite);
                 $identifiant = 'ACH';
                 $seq = 'achat_seq';
                 $idAchat = $this->Fonction->getSeq($identifiant,$seq);
@@ -249,7 +250,7 @@
                     $total += $prixAvecPourcentage;
 
                     if($quantiteStock < $qteTotal ){
-                        throw new Exception ("Stock insuffisant pour ". $code);
+                        throw new Exception ("Stock insuffisant");
                     }
     
                     $res = array (
@@ -274,7 +275,9 @@
                         'obtenu' => $obtenu,
                         'qtetotal' => $qteTotal,
                         'remisepourcentage' => $promotionPourcentage,
-                        'prixavecpourcentage' => $prixAvecPourcentage
+                        'prixavecpourcentage' => $prixAvecPourcentage,
+                        'prixtotal' => 0,
+                        'date' => ""
                     );
 
                     $result = $this->Fonction->pushArray($result,$res);
@@ -292,23 +295,25 @@
                 );
                 $this->db->insert('ticket',$ticket);
 
+                $i = -1;
                 foreach($result as $tab){
-                    $idAchat = $tab["idachat"];
-                    $prixAvecPourcentage = $tab["prixavecpourcentage"];
-                    $idArticle = $tab["idarticle"];
+                    $i++;
+                    $result[$i]["prixtotal"] = $total;
+                    $result[$i]["date"] = $now;
+                    $idAchat = $result[$i]["idachat"];
+                    $prixAvecPourcentage = $result[$i]["prixavecpourcentage"];
+                    $idArticle = $result[$i]["idarticle"];
                     $ticketAchat = array(
                         'idticket' => $idTicket,
                         'idachat' => $idAchat,
                         'prixtotalachat' => $prixAvecPourcentage
                     );  
                     $this->db->insert('ticketachat',$ticketAchat);
-                    $this->Article->modifier($idArticle,$tab["qtetotal"]);
-                    $this->Achat->valider($tab["idachat"]);
+                    $this->Article->modifier($idArticle,$result[$i]["qtetotal"]);
+                    $this->Achat->valider($result[$i]["idachat"]);
                 }
 
-                return $this->Fonction->toJson('success',$result,$message='ticket ok');
-                
-
+                return $result;
             }
             catch(Exception $ex){
                 throw $ex;

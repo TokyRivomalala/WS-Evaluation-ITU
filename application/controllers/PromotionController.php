@@ -50,6 +50,19 @@
             }
         }
 
+        public function selectPourcentage(){
+            try{
+                $res = $this->Pourcentage->selectPourcentage();
+                echo $res;
+            }catch(Exception $ex){
+                $erreur = array(
+                    'exception' => $ex->getMessage()
+                );
+                $res = $this->Fonction->toJson('error',$erreur,$message='Erreur de selection');
+                echo $res;
+            }
+        }
+
         public function nouveauGratuit(){
             $nbMin = $this->input->post('nbmin');
             $nbGratuit = $this->input->post('nbgratuit');

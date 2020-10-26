@@ -140,5 +140,12 @@
                 throw $ex;
             }
         }
+
+        public function selectPourcentage(){
+            $sql = "SELECT * FROM pourcentage";
+            $res = $this->db->query($sql);
+            $result = $res->result_array();
+            return $this->Fonction->toJson('success',$result,$message='Selection ok');
+        }
     }
 ?>
