@@ -166,5 +166,76 @@
                 throw $ex;
             }
         }
+
+        public function select($idAchat){
+            $sql = "SELECT * from achatcomplet WHERE idachat like '".$idAchat."'";
+            $res = $this->db->query($sql);
+            $result = $res->result_array();
+            return $result;
+        }
+
+        public function getTicket($idAchat){
+            try{
+                $util = $this->Admin->checkToken();
+                $achatComplet = $this->Achat->select($idAchat);
+                
+            }
+            catch(Exception $ex){
+                throw $ex;
+            }
+        }
+
+        public function getRemisePourcentage($prixUnitaire,$pourcentage){
+            return ($prixUnitaire * $pourcentage) / 100;
+        }
+
+        public function getRemiseGratuit($qte,$min,$gratuit){
+
+            $obtenu = 0 ; //le fanampiny oatra oe 5 teo am caisse de 7 no azo de 2 zany ty
+            $aPayer = 0; //le andoavana vola
+            $free = 0; //le azo gratuitement tamle nomena teo amle caisse
+            $qteDeb = $qte;
+            $qteTotal = $qte;
+
+            while ($qte > 0 ){
+
+                if($qte - $min >= 0){
+                    $aPayer += $min; 
+                    $qte -= $min;
+                    if($qte - $gratuit >= 0){
+                        $free += $gratuit;
+                        $qte -= $gratuit;
+                    }
+                    else{
+                        if($qte == 0){
+                            $obtenu += $gratuit;
+                        }
+                        else{
+                            $free = $qte;
+                            $obtenu = $gratuit - $qte;
+                            $qte = 0;
+                        }
+                    }  
+                }
+                else{
+                    $aPayer += $qte; 
+                    $qte = 0;
+                }
+            }
+            $qteTotal += $obtenu;
+
+            $result = array (
+                'min' => $min,
+                'gratuit' => $gratuit,
+                'qteCaisse' => $qteDeb,
+                'aPayer' => $aPayer,
+                'free' => $free,
+                'obtenu' => $obtenu,
+                'qteTotal' => $qteTotal
+            ); 
+            
+            //$res = $this->Fonction->toJson('success',$result,$message='pourcentage ok');
+            return $result;
+        }
     }
 ?>

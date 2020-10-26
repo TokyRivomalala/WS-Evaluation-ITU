@@ -52,6 +52,22 @@
             }
         }
 
+        public function remiseGratuit(){
+            $qte = $this->input->post('qte');
+            $min = $this->input->post('min');
+            $gratuit = $this->input->post('gratuit');
+            try{
+                $res = $this->Achat->getRemiseGratuit($qte,$min,$gratuit);
+                echo $res;
+            }catch(Exception $ex){
+                $erreur = array(
+                    'exception' => $ex->getMessage()
+                );
+                $res = $this->Fonction->toJson('error',$erreur,$message='Erreur d\'insertion');
+                echo $res;
+            }
+        }
+
         public function nouveauGratuit(){
             $nbMin = $this->input->post('nbmin');
             $nbGratuit = $this->input->post('nbgratuit');
