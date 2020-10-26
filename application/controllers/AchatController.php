@@ -52,12 +52,9 @@
             }
         }
 
-        public function remiseGratuit(){
-            $qte = $this->input->post('qte');
-            $min = $this->input->post('min');
-            $gratuit = $this->input->post('gratuit');
+        public function getTicket(){
             try{
-                $res = $this->Achat->getRemiseGratuit($qte,$min,$gratuit);
+                $res = $this->Achat->getTicket();
                 echo $res;
             }catch(Exception $ex){
                 $erreur = array(
@@ -98,6 +95,21 @@
             }   
         }
 
+        public function annuler(){
+            try{
+                $idAchat = $this->input->post('idachat');
+                $mdp = $this->input->post('mdp');
+                $res = $this->Achat->annuler($idAchat,$mdp);
+                echo $res;
+            }catch(Exception $ex){
+                $erreur = array(
+                    'exception' => $ex->getMessage()
+                );
+                $res = $this->Fonction->toJson('error',$erreur,$message='Erreur annulation achat');
+                echo $res;
+            }   
+        }
+
         public function supprimer($idutil){
             try{
                 $res = $this->Utilisateur->supprimer($idutil);
@@ -109,6 +121,31 @@
                 $res = $this->Fonction->toJson('error',$erreur,$message='Erreur de suppression');
                 echo $res;
             }   
+        }
+
+        public function selectComplet($currPage){
+            try{
+                $limit = 2000;
+                $offset = $this->Fonction->getOffset($currPage,$limit);
+
+                $res = $this->Achat->selectAchatCreer($limit,$offset);
+                $resTotalRow = sizeof($this->Achat->selectAchatCreerRow());
+
+                $nbPage = $this->Fonction->getNbPage($limit,$resTotalRow);
+
+                $arr = array(
+                    'achat' => $res,
+                    'nbPage' => $nbPage
+                );
+                $val = $this->Fonction->toJson('success',$arr, $resTotalRow.' achat(s) creer trouvee');
+                echo $val;
+            }catch(Exception $ex){
+                $erreur = array(
+                    'exception' => $ex->getMessage()
+                );
+                $res = $this->Fonction->toJson('error',$erreur,$message='Aucun achat creer');
+                echo $res;
+            }
         }
     }
 

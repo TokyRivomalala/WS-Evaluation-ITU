@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* Nom de SGBD :  PostgreSQL 8                                  */
-/* Date de cr�ation :  25/10/2020 23:20:10                      */
+/* Date de cr�ation :  26/10/2020 18:26:05                      */
 /*==============================================================*/
 
 
@@ -13,6 +13,8 @@ drop view ARTICLEETSTOCK CASCADE;
 drop view REMISECOMPLET CASCADE;
 
 drop view REMISEPOURCENTAGE CASCADE;
+
+drop view TICKETACHATCOMPLET CASCADE;
 
 drop view TICKETCOMPLET CASCADE;
 
@@ -32,7 +34,21 @@ drop table STOCKARTICLE CASCADE;
 
 drop table TICKET CASCADE;
 
+drop table TICKETACHAT CASCADE;
+
 drop table UTILISATEUR CASCADE;
+
+
+DROP SEQUENCE admin_seq;
+DROP SEQUENCE utilisateur_seq;
+DROP SEQUENCE article_seq;
+DROP SEQUENCE stockarticle_seq;
+DROP SEQUENCE pourcentage_seq;
+DROP SEQUENCE gratuit_seq;
+DROP SEQUENCE remise_seq;
+DROP SEQUENCE achat_seq;
+DROP SEQUENCE ticket_seq;
+
 
 /*==============================================================*/
 /* Table : ADMIN                                                */
@@ -112,10 +128,18 @@ create table ACHAT (
 /*==============================================================*/
 create table TICKET (
    IDTICKET             VARCHAR(30)          not null,
-   IDACHAT              VARCHAR(30)          null,
    DATETICKET           TIMESTAMP            not null,
    PRIXTOTAL            FLOAT                not null,
    constraint PK_TICKET primary key (IDTICKET)
+);
+
+/*==============================================================*/
+/* Table : TICKETACHAT                                          */
+/*==============================================================*/
+create table TICKETACHAT (
+   IDTICKET             VARCHAR(30)          null,
+   IDACHAT              VARCHAR(30)          null,
+   PRIXTOTALACHAT       FLOAT                not null
 );
 
 /*==============================================================*/
@@ -133,6 +157,7 @@ create table UTILISATEUR (
    TOKENEXPIRATION      TIMESTAMP            null,
    constraint PK_UTILISATEUR primary key (IDUTIL)
 );
+
 
 /*==============================================================*/
 /* Vue : ARTICLEETSTOCK                                         */
@@ -170,7 +195,6 @@ Gratuit.nbMin,
 Gratuit.nbGratuit
 FROM Gratuit JOIN RemisePourcentage ON Gratuit.idGratuit = RemisePourcentage.idGratuit;
 
-
 /*==============================================================*/
 /* Vue : ARTICLECOMPLET                                         */
 /*==============================================================*/
@@ -207,14 +231,15 @@ ArticleComplet.nbGratuit,
 Achat.idAchat,
 Achat.dateAchat,
 Achat.quantiteProd,
-Achat.prixTotal,
+Achat.prixTotal AS prixSansRemise,
 Achat.etat
 FROM ArticleComplet JOIN Achat ON Achat.idArticle = ArticleComplet.idArticle;
 
+
 /*==============================================================*/
-/* Vue : TICKETCOMPLET                                          */
+/* Vue : TICKETACHATCOMPLET                                     */
 /*==============================================================*/
-create or replace view TICKETCOMPLET as
+create or replace view TICKETACHATCOMPLET as
 select
 AchatComplet.idArticle,
 AchatComplet.designation,
@@ -229,11 +254,37 @@ AchatComplet.nbGratuit,
 AchatComplet.idAchat,
 AchatComplet.dateAchat,
 AchatComplet.quantiteProd,
-AchatComplet.prixTotal,
+AchatComplet.prixSansRemise,
 AchatComplet.etat,
-Ticket.idTicket,
-Ticket.dateTicket
-FROM AchatComplet JOIN Ticket ON AchatComplet.idAchat = Ticket.idAchat;
+TicketAchat.idTicket,
+TicketAchat.prixAvecRemise
+FROM AchatComplet JOIN TicketAchat ON AchatComplet.idAchat = TicketAchat.idAchat;
+
+/*==============================================================*/
+/* Vue : TICKETCOMPLET                                          */
+/*==============================================================*/
+create or replace view TICKETCOMPLET as
+select
+TicketAchatComplet.idArticle,
+TicketAchatComplet.designation,
+TicketAchatComplet.code,
+TicketAchatComplet.quantiteStock,
+TicketAchatComplet.prixUnitaire,
+TicketAchatComplet.pourcentage,
+TicketAchatComplet.idPourcentage,
+TicketAchatComplet.idGratuit,
+TicketAchatComplet.nbMin,
+TicketAchatComplet.nbGratuit,
+TicketAchatComplet.idAchat,
+TicketAchatComplet.dateAchat,
+TicketAchatComplet.quantiteProd,
+TicketAchatComplet.prixSansRemise,
+TicketAchatComplet.etat,
+TicketAchatComplet.idTicket,
+TicketAchatComplet.prixAvecRemise,
+Ticket.dateTicket,
+Ticket.prixTotal
+FROM TicketAchatComplet JOIN Ticket ON TicketAchatComplet.idTicket = Ticket.idTicket;
 
 alter table ACHAT
    add constraint FK_ACHAT_REFERENCE_ARTICLE foreign key (IDARTICLE)
@@ -260,9 +311,14 @@ alter table STOCKARTICLE
       references ARTICLE (IDARTICLE)
       on delete restrict on update restrict;
 
-alter table TICKET
-   add constraint FK_TICKET_REFERENCE_ACHAT foreign key (IDACHAT)
+alter table TICKETACHAT
+   add constraint FK_TICKETAC_REFERENCE_ACHAT foreign key (IDACHAT)
       references ACHAT (IDACHAT)
+      on delete restrict on update restrict;
+
+alter table TICKETACHAT
+   add constraint FK_TICKETAC_REFERENCE_TICKET foreign key (IDTICKET)
+      references TICKET (IDTICKET)
       on delete restrict on update restrict;
 
 
@@ -274,6 +330,7 @@ CREATE SEQUENCE pourcentage_seq;
 CREATE SEQUENCE gratuit_seq;
 CREATE SEQUENCE remise_seq;
 CREATE SEQUENCE achat_seq;
+CREATE SEQUENCE ticket_seq;
 
 INSERT INTO ADMIN (IDADMIN,EMAIL,MDP) VALUES (CONCAT('AD',lpad(nextval('admin_seq')::text,2,'0')),'toky@gmail.com','toky');
 
@@ -292,13 +349,13 @@ INSERT INTO ARTICLE (IDARTICLE,DESIGNATION,CODE) VALUES (CONCAT('ART',lpad(nextv
 INSERT INTO ARTICLE (IDARTICLE,DESIGNATION,CODE) VALUES (CONCAT('ART',lpad(nextval('article_seq')::text,2,'0')),'Bolo Duo Choco','BDC');
 INSERT INTO ARTICLE (IDARTICLE,DESIGNATION,CODE) VALUES (CONCAT('ART',lpad(nextval('article_seq')::text,2,'0')),'Bolo Duo Vanille','BDV');
 
-INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART01',20,1100);
-INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART02',08,1000);
-INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART03',14,2300);
-INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART04',22,600);
-INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART05',25,1600);
-INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART06',13,300);
-INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART07',11,300);
+INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART01',200,1100);
+INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART02',108,1000);
+INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART03',124,2300);
+INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART04',232,600);
+INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART05',275,1600);
+INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART06',103,300);
+INSERT INTO STOCKARTICLE (IDARTICLE,QUANTITESTOCK,PRIXUNITAIRE) VALUES ('ART07',111,300);
 
 INSERT INTO POURCENTAGE (IDPOURCENTAGE,POURCENTAGE) VALUES (CONCAT('PRC',lpad(nextval('pourcentage_seq')::text,2,'0')),0);
 INSERT INTO POURCENTAGE (IDPOURCENTAGE,POURCENTAGE) VALUES (CONCAT('PRC',lpad(nextval('pourcentage_seq')::text,2,'0')),21.27);
@@ -325,7 +382,4 @@ INSERT INTO ACHAT (IDACHAT,IDARTICLE,DATEACHAT,QUANTITEPROD,PRIXTOTAL,ETAT) VALU
 INSERT INTO ACHAT (IDACHAT,IDARTICLE,DATEACHAT,QUANTITEPROD,PRIXTOTAL,ETAT) VALUES (CONCAT('ACH',lpad(nextval('achat_seq')::text,2,'0')),'ART05','22-10-2020',7,11200,1);
 INSERT INTO ACHAT (IDACHAT,IDARTICLE,DATEACHAT,QUANTITEPROD,PRIXTOTAL,ETAT) VALUES (CONCAT('ACH',lpad(nextval('achat_seq')::text,2,'0')),'ART06','22-10-2020',8,2400,1);
 INSERT INTO ACHAT (IDACHAT,IDARTICLE,DATEACHAT,QUANTITEPROD,PRIXTOTAL,ETAT) VALUES (CONCAT('ACH',lpad(nextval('achat_seq')::text,2,'0')),'ART07','22-10-2020',9,2700,1);
-
-
-
 

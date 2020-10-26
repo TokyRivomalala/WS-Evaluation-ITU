@@ -130,6 +130,30 @@
             }
         }
 
+        public function annuler($idAchat,$mdp){
+            try{
+                $util = $this->Admin->checkToken();
+                $email = "toky@gmail.com";
+                $this->Admin->checkAdmin($email,$mdp);
+                if($this->Fonction->IsNullOrEmptyString($idAchat) ){
+                    throw new Exception("Veuiller remplir le formulaire.");
+                }
+                else{
+                    $this->db->set('etat', 0);
+                    $this->db->where('idachat', $idAchat);
+                    $this->db->update('achat');
+
+                    $res = array (
+                        'idachat' => $idAchat,
+                        'etat' => 0
+                    );
+                    return $this->Fonction->toJson('success',$res,'Achat annuler');
+                }
+            }catch(Exception $ex){
+                throw $ex;
+            }
+        }
+
         public function supprimer($idutil){
             try{
                 $util = $this->Admin->checkToken();
@@ -174,11 +198,143 @@
             return $result;
         }
 
-        public function getTicket($idAchat){
+        public function selectEtatCreer(){
+            $sql = "SELECT * from achatcomplet WHERE etat = ". 1;
+            $res = $this->db->query($sql);
+            $result = $res->result_array();
+            return $result;
+        }
+
+        public function getTicket(){
             try{
                 $util = $this->Admin->checkToken();
-                $achatComplet = $this->Achat->select($idAchat);
+                $result = array();
+                $achatCreer = $this->Achat->selectEtatCreer();
+
+                $total = 0;
+
+                foreach($achatCreer as $tab){
+                    $idAchat = $tab["idachat"];
+                    
+                    $achatComplet = $this->Achat->select($idAchat);
+
+                    $qte = $achatComplet[0]["quantiteprod"];
+                    $min = $achatComplet[0]["nbmin"];
+                    $gratuit = $achatComplet[0]["nbgratuit"];
+                    $prixUnitaire = $achatComplet[0]["prixunitaire"];
+                    $pourcentage = $achatComplet[0]["pourcentage"];
+    
+                    $idArticle = $achatComplet[0]["idarticle"];
+                    $designation = $achatComplet[0]["designation"];
+                    $code = $achatComplet[0]["code"];
+                    $quantiteStock = $achatComplet[0]["quantitestock"];
+                    $idPourcentage = $achatComplet[0]["idpourcentage"];
+                    $idGratuit = $achatComplet[0]["idgratuit"];
+                    $dateAchat = $achatComplet[0]["dateachat"];
+                    $prixSansPromotion = $achatComplet[0]["prixsansremise"];
+                    $etat = $achatComplet[0]["etat"];
+    
+                    $promotionGratuit = $this->Achat->getRemiseGratuit($qte,$min,$gratuit);
+                    
+                    $aPayer = $promotionGratuit['aPayer'];
+                    $qteCaisse = $promotionGratuit['qteCaisse'];
+                    $free = $promotionGratuit['free'];
+                    $obtenu = $promotionGratuit['obtenu'];
+                    $qteTotal = $promotionGratuit['qteTotal'];
+                    
+                    $promotionPourcentage = $this->Achat->getRemisePourcentage($prixUnitaire,$pourcentage);
+                    $nouveauPrixUnitaire = ( $prixUnitaire - $promotionPourcentage ) ;
+                    $prixAvecPourcentage = $nouveauPrixUnitaire * $aPayer;
+
+                    $total += $prixAvecPourcentage;
+
+                    if($quantiteStock < $qteTotal ){
+                        throw new Exception ("Stock insuffisant pour ". $code);
+                    }
+    
+                    $res = array (
+                        'idarticle' => $idArticle,
+                        'idachat' => $idAchat,
+                        'designation' => $designation,
+                        'code' => $code,
+                        'prixunitairesansremise' => $prixUnitaire,
+                        'nouveauprixunitaire' => $nouveauPrixUnitaire,
+                        'quantitestock' => $quantiteStock,
+                        'idpourcentage' => $idPourcentage,
+                        'pourcentage' => $pourcentage,
+                        'idgratuit' => $idGratuit,
+                        'nbmin' => $min,
+                        'nbgratuit' => $gratuit,
+                        'dateachat' => $dateAchat,
+                        'prixsanspromotion' => $prixSansPromotion,
+                        'etat' => $etat,
+                        'aPayer' => $aPayer,
+                        'qtecaisse' => $qteCaisse,
+                        'free' => $free,
+                        'obtenu' => $obtenu,
+                        'qtetotal' => $qteTotal,
+                        'remisepourcentage' => $promotionPourcentage,
+                        'prixavecpourcentage' => $prixAvecPourcentage
+                    );
+
+                    $result = $this->Fonction->pushArray($result,$res);
+                }
+
+                $identifiant = 'TKT';
+                $seq = 'ticket_seq';
+                $idTicket = $this->Fonction->getSeq($identifiant,$seq);
+                $now = $this->Fonction->dateNow();
+
+                $ticket = array(
+                    'idticket' => $idTicket,
+                    'dateticket' => $now,
+                    'prixtotal' => $total
+                );
+                $this->db->insert('ticket',$ticket);
+
+                foreach($result as $tab){
+                    $idAchat = $tab["idachat"];
+                    $prixAvecPourcentage = $tab["prixavecpourcentage"];
+                    $idArticle = $tab["idarticle"];
+                    $ticketAchat = array(
+                        'idticket' => $idTicket,
+                        'idachat' => $idAchat,
+                        'prixtotalachat' => $prixAvecPourcentage
+                    );  
+                    $this->db->insert('ticketachat',$ticketAchat);
+                    $this->Article->modifier($idArticle,$tab["qtetotal"]);
+                    $this->Achat->valider($tab["idachat"]);
+                }
+
+                return $this->Fonction->toJson('success',$result,$message='ticket ok');
                 
+
+            }
+            catch(Exception $ex){
+                throw $ex;
+            }
+        }
+
+        public function selectAchatCreer($limit,$offset){
+            try{
+                $util = $this->Admin->checkToken();
+                $sql = "SELECT * from achatComplet where etat = 1 limit ".$limit." offset ".$offset;
+                $res = $this->db->query($sql);
+                $result = $res->result_array();
+                return $result;
+            }
+            catch(Exception $ex){
+                throw $ex;
+            }
+        }
+
+        public function selectAchatCreerRow(){
+            try{
+                $util = $this->Admin->checkToken();
+                $sql = "SELECT * from achatcomplet where etat = 1";
+                $res = $this->db->query($sql);
+                $result = $res->result_array();
+                return $result;
             }
             catch(Exception $ex){
                 throw $ex;

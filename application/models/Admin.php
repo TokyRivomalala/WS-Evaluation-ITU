@@ -28,6 +28,26 @@
             }
         }
 
+        public function checkAdmin($email,$mdp){
+            $data = array (
+                'email' => $email,
+                'mdp' => $mdp
+            );
+            try{
+
+                $query = $this->db->get_where('admin', $data);
+                $res = $query->result_array();
+                if(sizeof($res) == 0){
+                    throw new Exception('Erreur de mot de passe');
+                }
+                else{
+                    return $this->Fonction->toJson('success',$data,'Login ok');
+                }
+            }catch(Exception $ex){
+                throw $ex;
+            }
+        }
+
         public function checkToken(){
             $token = $this->Fonction->getBearerToken();
             try{

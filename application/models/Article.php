@@ -78,6 +78,32 @@
             $result = $res->result_array();
             return $result;
         }
+
+        public function selectArticle($limit,$offset){
+            try{
+                $util = $this->Admin->checkToken();
+                $sql = "SELECT * from articleComplet limit ".$limit." offset ".$offset;
+                $res = $this->db->query($sql);
+                $result = $res->result_array();
+                return $result;
+            }
+            catch(Exception $ex){
+                throw $ex;
+            }
+        }
+
+        public function selectArticleRow(){
+            try{
+                $util = $this->Admin->checkToken();
+                $sql = "SELECT * from articleComplet";
+                $res = $this->db->query($sql);
+                $result = $res->result_array();
+                return $result;
+            }
+            catch(Exception $ex){
+                throw $ex;
+            }
+        }
         
         public function nouveau($designation,$code){
             try{
@@ -136,20 +162,32 @@
             }
         }
 
-        public function modifier($idutil,$mdp){
+        public function selectStock($idArticle){
+            $sql = "SELECT * from stockarticle WHERE idarticle like '".$idArticle."'";
+            $res = $this->db->query($sql);
+            $result = $res->result_array();
+            return $result;
+        }
+
+        public function modifier($idArticle,$stock){
             try{
                 $util = $this->Admin->checkToken();
-                if($this->Fonction->IsNullOrEmptyString($mdp) || $this->Fonction->IsNullOrEmptyString($idutil)){
+                if($this->Fonction->IsNullOrEmptyString($idArticle) || $this->Fonction->IsNullOrEmptyString($stock)){
                     throw new Exception("Veuiller remplir le formulaire.");
                 }
                 else{
-                    $this->db->set('mdp', $mdp);
-                    $this->db->where('idutil', $idutil);
-                    $this->db->update('utilisateur');
+                    $stockActuel = $this->Article->selectStock($idArticle);
+                    $stockActuel = $stockActuel[0]['quantitestock'];
+                    $newStock = $stockActuel - $stock;
+                    $this->db->set('quantitestock', $newStock);
+                    $this->db->where('idarticle', $idArticle);
+                    $this->db->update('stockarticle');
 
                     $res = array (
-                        'idutil' => $idutil,
-                        'mdp' => $mdp
+                        'idarticle' => $idArticle,
+                        'stock' => $stock,
+                        'stockactuel' => $stockActuel,
+                        'newstock' => $newStock
                     );
                     return $this->Fonction->toJson('success',$res,'Utilisateur modifie');
                 }

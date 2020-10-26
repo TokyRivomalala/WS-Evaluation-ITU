@@ -36,6 +36,31 @@
             }
         }
 
+        public function selectComplet($currPage){
+            try{
+                $limit = 2000;
+                $offset = $this->Fonction->getOffset($currPage,$limit);
+
+                $res = $this->Article->selectArticle($limit,$offset);
+                $resTotalRow = sizeof($this->Article->selectArticleRow());
+
+                $nbPage = $this->Fonction->getNbPage($limit,$resTotalRow);
+
+                $arr = array(
+                    'article' => $res,
+                    'nbPage' => $nbPage
+                );
+                $val = $this->Fonction->toJson('success',$arr, $resTotalRow.' article(s) trouvee');
+                echo $val;
+            }catch(Exception $ex){
+                $erreur = array(
+                    'exception' => $ex->getMessage()
+                );
+                $res = $this->Fonction->toJson('error',$erreur,$message='Aucun Article');
+                echo $res;
+            }
+        }
+
         public function nouveau(){
             $designation = $this->input->post('designation');
             $code = $this->input->post('code');
