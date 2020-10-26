@@ -1,5 +1,5 @@
 <?php
-    class Article extends CI_Model{
+    class Achat extends CI_Model{
 
         public function recherche($dateNaissStart,$dateNaissFinal,$email,$nom,$orderBy,$order,$limit,$offset){
             try{
@@ -65,71 +65,43 @@
             }   
         }
 
-        public function select($code){
-            $sql = "SELECT * from article WHERE code like '".$code."'";
-            $res = $this->db->query($sql);
-            $result = $res->result_array();
-            return $result;
-        }
-
-        public function selectComplet($idArticle){
-            $sql = "SELECT * from articleComplet WHERE idArticle like  '".$idArticle."'";
-            $res = $this->db->query($sql);
-            $result = $res->result_array();
-            return $result;
-        }
-        
-        public function nouveau($designation,$code){
-            try{
-                $ifCodeExist = sizeof($this->Article->select($code));
-                if($ifCodeExist > 0){
-                    throw new Exception("Ce code existe deja.");
-                }
-                else{
-                    
-                    $identifiant = 'ART';
-                    $seq = 'article_seq';
-                    $idArticle = $this->Fonction->getSeq($identifiant,$seq);
-
-                    $article = array(
-                        'idarticle' => $idArticle,
-                        'designation' => $designation,
-                        'code' => $code
-                    );
-                    $this->db->insert('article',$article);
-                    return $idArticle;
-                    //return $this->Fonction->toJson('success',$util,'Article insere');
-                }
-            }
-            catch(Exception $ex){
-                throw $ex;
-            }
-        }
-
-        public function nouveauArticle($designation,$code,$quantiteStock,$prixUnitaire){
+        public function nouveau($code,$quantite){
             try{
                 $util = $this->Admin->checkToken();
-                if($this->Fonction->IsNullOrEmptyString($designation) || $this->Fonction->IsNullOrEmptyString($code) || $this->Fonction->IsNullOrEmptyString($quantiteStock) || $this->Fonction->IsNullOrEmptyString($prixUnitaire) ){
-                    throw new Exception("Veuiller remplir tout les champs.");
-                } 
-                else{
-
-                    $idArticle = $this->Article->nouveau($designation,$code);
-                    $this->StockArticle->nouveau($idArticle,$quantiteStock,$prixUnitaire);
-                    $promotion = $this->Promotion->nouveau($idArticle);
-
-                    
-                    $result = array(
-                        'idarticle' => $idArticle,
-                        'designation' => $designation,
-                        'code' => $code,
-                        'quantitestock' => $quantiteStock,
-                        'prixunitaire' => $prixUnitaire,
-                        'pourcentage' => $promotion["idpourcentage"],
-                        'gratuit' => $promotion["idgratuit"]
-                    );
-                    return $this->Fonction->toJson('success',$result,'Article insere');
+                if($this->Fonction->IsNullOrEmptyString($code) || $this->Fonction->IsNullOrEmptyString($quantite)){
+                    throw new Exception("Veuiller remplir le formulaire.");
                 }
+                if($quantite <= 0 ){
+                    throw new Exception("Quantite invalide");
+                }
+                $article = $this->Article->select($code);
+                //return $this->Fonction->toJson('success',$article,$message='Achat insere');
+                $ifArtExist = sizeof($article);
+                if($ifArtExist == 0){
+                    throw new Exception("Aucun article ne correspond a ce code");
+                }
+
+                $idArticle = $article[0]["idarticle"];
+
+                $identifiant = 'ACH';
+                $seq = 'achat_seq';
+                $idAchat = $this->Fonction->getSeq($identifiant,$seq);
+                $now = $this->Fonction->dateNow();
+
+                $articleComplet = $this->Article->selectComplet($idArticle);
+                $prix = $articleComplet[0]['prixunitaire'] * $quantite;
+
+                $achat = array(
+                    'idachat' => $idAchat,
+                    'idarticle' => $idArticle,
+                    'dateachat' => $now,
+                    'quantiteprod' => $quantite,
+                    'prixtotal' => $prix,
+                    'etat' => 1,
+                );
+                $this->db->insert('achat',$achat);
+                $res = $this->Fonction->toJson('success',$achat,$message='Achat insere');
+                return $res; 
             }
             catch(Exception $ex){
                 throw $ex;
@@ -169,6 +141,27 @@
                         'idutil' => $idutil
                 );
                 return $this->Fonction->toJson('success',$res,'Utilisateur supprime');
+            }catch(Exception $ex){
+                throw $ex;
+            }
+        }
+
+        public function valider($idAchat){
+            try{
+                $util = $this->Admin->checkToken();
+                if($this->Fonction->IsNullOrEmptyString($idAchat)){
+                    throw new Exception("Veuiller remplir le formulaire.");
+                }
+                else{
+                    $this->db->set('etat', 10);
+                    $this->db->where('idachat', $idAchat);
+                    $this->db->update('achat');
+
+                    $res = array (
+                        'idachat' => $idAchat,
+                    );
+                    return $this->Fonction->toJson('success',$res,'Achat valider');
+                }
             }catch(Exception $ex){
                 throw $ex;
             }

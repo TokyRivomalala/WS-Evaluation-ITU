@@ -1,5 +1,5 @@
 <?php
-    class Article extends CI_Model{
+    class Pourcentage extends CI_Model{
 
         public function recherche($dateNaissStart,$dateNaissFinal,$email,$nom,$orderBy,$order,$limit,$offset){
             try{
@@ -65,71 +65,38 @@
             }   
         }
 
-        public function select($code){
-            $sql = "SELECT * from article WHERE code like '".$code."'";
+        public function select($pourcentage){
+            $sql = "SELECT * from pourcentage WHERE pourcentage = ".$pourcentage;
             $res = $this->db->query($sql);
             $result = $res->result_array();
             return $result;
         }
 
-        public function selectComplet($idArticle){
-            $sql = "SELECT * from articleComplet WHERE idArticle like  '".$idArticle."'";
-            $res = $this->db->query($sql);
-            $result = $res->result_array();
-            return $result;
-        }
-        
-        public function nouveau($designation,$code){
-            try{
-                $ifCodeExist = sizeof($this->Article->select($code));
-                if($ifCodeExist > 0){
-                    throw new Exception("Ce code existe deja.");
-                }
-                else{
-                    
-                    $identifiant = 'ART';
-                    $seq = 'article_seq';
-                    $idArticle = $this->Fonction->getSeq($identifiant,$seq);
-
-                    $article = array(
-                        'idarticle' => $idArticle,
-                        'designation' => $designation,
-                        'code' => $code
-                    );
-                    $this->db->insert('article',$article);
-                    return $idArticle;
-                    //return $this->Fonction->toJson('success',$util,'Article insere');
-                }
-            }
-            catch(Exception $ex){
-                throw $ex;
-            }
-        }
-
-        public function nouveauArticle($designation,$code,$quantiteStock,$prixUnitaire){
+        public function nouveau($pourcentage){
             try{
                 $util = $this->Admin->checkToken();
-                if($this->Fonction->IsNullOrEmptyString($designation) || $this->Fonction->IsNullOrEmptyString($code) || $this->Fonction->IsNullOrEmptyString($quantiteStock) || $this->Fonction->IsNullOrEmptyString($prixUnitaire) ){
-                    throw new Exception("Veuiller remplir tout les champs.");
-                } 
-                else{
-
-                    $idArticle = $this->Article->nouveau($designation,$code);
-                    $this->StockArticle->nouveau($idArticle,$quantiteStock,$prixUnitaire);
-                    $promotion = $this->Promotion->nouveau($idArticle);
-
-                    
-                    $result = array(
-                        'idarticle' => $idArticle,
-                        'designation' => $designation,
-                        'code' => $code,
-                        'quantitestock' => $quantiteStock,
-                        'prixunitaire' => $prixUnitaire,
-                        'pourcentage' => $promotion["idpourcentage"],
-                        'gratuit' => $promotion["idgratuit"]
-                    );
-                    return $this->Fonction->toJson('success',$result,'Article insere');
+                if($this->Fonction->IsNullOrEmptyString($pourcentage)){
+                    throw new Exception("Veuiller remplir le formulaire.");
                 }
+                if($pourcentage <= 0 ){
+                    throw new Exception("Pourcentage invalide");
+                }
+                $ifPrcExist = sizeof($this->Pourcentage->select($pourcentage));
+                if($ifPrcExist > 0){
+                    throw new Exception("Cette promotion pourcentage existe deja.");
+                }
+
+                $identifiant = 'PRC';
+                $seq = 'pourcentage_seq';
+                $idPourcentage = $this->Fonction->getSeq($identifiant,$seq);
+
+                $prc = array(
+                    'idpourcentage' => $idPourcentage,
+                    'pourcentage' => $pourcentage
+                );
+                $this->db->insert('pourcentage',$prc);
+                $res = $this->Fonction->toJson('success',$prc,$message='Pourcentage insere');
+                return $res; 
             }
             catch(Exception $ex){
                 throw $ex;

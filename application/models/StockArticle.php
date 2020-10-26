@@ -3,6 +3,12 @@
 
         public function nouveau($idArticle,$quantiteStock,$prixUnitaire){
             try{
+                if($quantiteStock <= 0 ){
+                    throw new Exception("Quantite invalide");
+                }
+                if($prixUnitaire <= 0 ){
+                    throw new Exception("Prix invalide");
+                }
                 $stockArticle = array(
                     'idarticle' => $idArticle,
                     'quantitestock' => $quantiteStock,
