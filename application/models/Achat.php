@@ -234,6 +234,10 @@
                     $gratuit = $achatComplet[0]["nbgratuit"];
                     $prixUnitaire = $achatComplet[0]["prixunitaire"];
                     $pourcentage = $achatComplet[0]["pourcentage"];
+
+                    $idGratuitPourcentage = $achatComplet[0]["idgratuitpourcentage"];
+                    $prc = $achatComplet[0]["prc"];
+                    $nbMinPrc = $achatComplet[0]["nbminprc"];
     
                     $idArticle = $achatComplet[0]["idarticle"];
                     $designation = $achatComplet[0]["designation"];
@@ -245,19 +249,28 @@
                     $prixSansPromotion = $achatComplet[0]["prixsansremise"];
                     $etat = $achatComplet[0]["etat"];
     
+
                     $promotionGratuit = $this->Achat->getRemiseGratuit($qte,$min,$gratuit);
                     
+                        
                     $aPayer = $promotionGratuit['aPayer'];
                     $qteCaisse = $promotionGratuit['qteCaisse'];
                     $free = $promotionGratuit['free'];
                     $obtenu = $promotionGratuit['obtenu'];
                     $qteTotal = $promotionGratuit['qteTotal'];
-                    
-                    $promotionPourcentage = $this->Achat->getRemisePourcentage($prixUnitaire,$pourcentage);
-                    $nouveauPrixUnitaire = ( $prixUnitaire - $promotionPourcentage ) ;
-                    $prixAvecPourcentage = $nouveauPrixUnitaire * $aPayer;
 
-                    $total += $prixAvecPourcentage;
+
+                    if($idGratuitPourcentage != 'GRP01'){
+                        $pxTotal = $this->Achat->getRemiseGratuitPourcentage($aPayer,$prixUnitaire,$nbMinPrc,$prc);
+                    }
+                    else{
+                        $promotionPourcentage = $this->Achat->getRemisePourcentage($prixUnitaire,$pourcentage);
+                        $nouveauPrixUnitaire = ( $prixUnitaire - $promotionPourcentage ) ;
+                        $pxTotal = $nouveauPrixUnitaire * $aPayer;
+                    }
+                    
+
+                    $total += $pxTotal;
 
                     if($quantiteStock < $qteTotal ){
                         throw new Exception ("Stock insuffisant");
@@ -268,8 +281,8 @@
                         'idachat' => $idAchat,
                         'designation' => $designation,
                         'code' => $code,
-                        'prixunitairesansremise' => $prixUnitaire,
-                        'nouveauprixunitaire' => $nouveauPrixUnitaire,
+                        //'prixunitairesansremise' => $prixUnitaire,
+                        //'nouveauprixunitaire' => $nouveauPrixUnitaire,
                         'quantitestock' => $quantiteStock,
                         'idpourcentage' => $idPourcentage,
                         'pourcentage' => $pourcentage,
@@ -277,17 +290,20 @@
                         'nbmin' => $min,
                         'nbgratuit' => $gratuit,
                         'dateachat' => $dateAchat,
-                        'prixsanspromotion' => $prixSansPromotion,
+                        //'prixsanspromotion' => $prixSansPromotion,
                         'etat' => $etat,
                         'aPayer' => $aPayer,
                         'qtecaisse' => $qteCaisse,
                         'free' => $free,
                         'obtenu' => $obtenu,
                         'qtetotal' => $qteTotal,
-                        'remisepourcentage' => $promotionPourcentage,
-                        'prixavecpourcentage' => $prixAvecPourcentage,
+                        //'remisepourcentage' => $promotionPourcentage,
+                        'prixtotalarticle' => $pxTotal,
                         'prixtotal' => 0,
-                        'date' => ""
+                        'date' => "",
+                        'idgratuitpourcentage' => $idGratuitPourcentage,
+                        'prc' => $prc,
+                        'nbminprc' => $nbMinPrc
                     );
 
                     $result = $this->Fonction->pushArray($result,$res);
@@ -311,12 +327,12 @@
                     $result[$i]["prixtotal"] = $total;
                     $result[$i]["date"] = $now;
                     $idAchat = $result[$i]["idachat"];
-                    $prixAvecPourcentage = $result[$i]["prixavecpourcentage"];
+                    //$prixAvecPourcentage = $result[$i]["prixavecpourcentage"];
                     $idArticle = $result[$i]["idarticle"];
                     $ticketAchat = array(
                         'idticket' => $idTicket,
                         'idachat' => $idAchat,
-                        'prixtotalachat' => $prixAvecPourcentage
+                        'prixtotalachat' => $total
                     );  
                     $this->db->insert('ticketachat',$ticketAchat);
                     $this->Article->modifier($idArticle,$result[$i]["qtetotal"]);
@@ -407,6 +423,37 @@
             
             //$res = $this->Fonction->toJson('success',$result,$message='pourcentage ok');
             return $result;
+        }
+
+        public function getRemiseGratuitPourcentage($qte,$pu,$min,$prc){
+
+            $obtenu = 0 ; //le fanampiny oatra oe 5 teo am caisse de 7 no azo de 2 zany ty
+            $aPayer = 0; //le andoavana vola
+            $free = 0; //le azo gratuitement tamle nomena teo amle caisse
+            $qteDeb = $qte;
+            $qteTotal = $qte;
+            $pxTotal = 0;
+            $newPu = ($pu * $prc) / 100;
+            $newPu = $pu - $newPu;
+
+            while ($qte > 0 ){
+
+                if($qte - $min >= 0){
+                    $pxTotal = $pxTotal + ($min * $pu); 
+                    $qte -= $min;
+                    if($qte > 0){
+                        $pxTotal = $pxTotal + $newPu;
+                        $qte -= 1;
+                    }          
+                }
+                else{
+                    $pxTotal = $pxTotal + ($qte * $pu); 
+                    $qte = 0;
+                }
+            }
+            
+            //$res = $this->Fonction->toJson('success',$result,$message='pourcentage ok');
+            return $pxTotal;
         }
     }
 ?>

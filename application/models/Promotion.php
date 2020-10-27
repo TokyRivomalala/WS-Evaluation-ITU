@@ -69,11 +69,13 @@
             try{
                 $idGratuit = 'GRT01';
                 $idPourcentage = "PRC01";
+                $idGratuitPourcentage = "GRP01";
 
                 $remise = array(
                     'idarticle' => $idArticle,
                     'idgratuit' => $idGratuit,
-                    'idpourcentage' => $idPourcentage
+                    'idpourcentage' => $idPourcentage,
+                    'idgratuitpourcentage' => $idGratuitPourcentage,
                 );
                 $this->db->insert('remise',$remise);
                 return $remise;

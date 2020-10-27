@@ -38,6 +38,8 @@ drop table TICKETACHAT CASCADE;
 
 drop table UTILISATEUR CASCADE;
 
+drop table GRATUITPOURCENTAGE CASCADE;
+
 
 DROP SEQUENCE admin_seq;
 DROP SEQUENCE utilisateur_seq;
@@ -48,7 +50,7 @@ DROP SEQUENCE gratuit_seq;
 DROP SEQUENCE remise_seq;
 DROP SEQUENCE achat_seq;
 DROP SEQUENCE ticket_seq;
-
+DROP SEQUENCE gratuitpourcentage_seq;
 
 /*==============================================================*/
 /* Table : ADMIN                                                */
@@ -83,6 +85,16 @@ create table GRATUIT (
 );
 
 /*==============================================================*/
+/* Table : GRATUITPOURCENTAGE                                              */
+/*==============================================================*/
+create table GRATUITPOURCENTAGE (
+   IDGRATUITPOURCENTAGE            VARCHAR(30)          not null,
+   NBMINPRC                FLOAT                not null,
+   PRC            FLOAT                not null,
+   constraint PK_GRATUITPOURCENTAGE primary key (IDGRATUITPOURCENTAGE)
+);
+
+/*==============================================================*/
 /* Table : POURCENTAGE                                          */
 /*==============================================================*/
 create table POURCENTAGE (
@@ -97,7 +109,8 @@ create table POURCENTAGE (
 create table REMISE (
    IDARTICLE            VARCHAR(30)          null,
    IDGRATUIT            VARCHAR(30)          null,
-   IDPOURCENTAGE        VARCHAR(50)          null
+   IDPOURCENTAGE        VARCHAR(50)          null,
+   IDGRATUITPOURCENTAGE        VARCHAR(50)          null
 );
 
 /*==============================================================*/
@@ -179,21 +192,40 @@ select
 Pourcentage.idPourcentage,
 Pourcentage.pourcentage,
 Remise.idArticle,
-Remise.idGratuit
+Remise.idGratuit,
+Remise.IDGRATUITPOURCENTAGE
 FROM Pourcentage JOIN Remise ON Pourcentage.idPourcentage = Remise.idPourcentage;
+
+/*==============================================================*/
+/* Vue : REMISEGRATUIT                                         */
+/*==============================================================*/
+create or replace view REMISEGRATUIT as
+select
+RemisePourcentage.idPourcentage,
+RemisePourcentage.pourcentage,
+RemisePourcentage.idArticle,
+RemisePourcentage.idGratuit,
+RemisePourcentage.IDGRATUITPOURCENTAGE,
+Gratuit.nbMin,
+Gratuit.nbGratuit
+FROM Gratuit JOIN RemisePourcentage ON Gratuit.idGratuit = RemisePourcentage.idGratuit;
+
 
 /*==============================================================*/
 /* Vue : REMISECOMPLET                                          */
 /*==============================================================*/
 create or replace view REMISECOMPLET as
 select
-RemisePourcentage.idPourcentage,
-RemisePourcentage.pourcentage,
-RemisePourcentage.idArticle,
-RemisePourcentage.idGratuit,
-Gratuit.nbMin,
-Gratuit.nbGratuit
-FROM Gratuit JOIN RemisePourcentage ON Gratuit.idGratuit = RemisePourcentage.idGratuit;
+REMISEGRATUIT.idPourcentage,
+REMISEGRATUIT.pourcentage,
+REMISEGRATUIT.idArticle,
+REMISEGRATUIT.idGratuit,
+REMISEGRATUIT.nbMin,
+REMISEGRATUIT.nbGratuit,
+REMISEGRATUIT.IDGRATUITPOURCENTAGE,
+GRATUITPOURCENTAGE.NBMINPRC,
+GRATUITPOURCENTAGE.prc
+FROM GRATUITPOURCENTAGE JOIN REMISEGRATUIT ON GRATUITPOURCENTAGE.IDGRATUITPOURCENTAGE = REMISEGRATUIT.IDGRATUITPOURCENTAGE;
 
 /*==============================================================*/
 /* Vue : ARTICLECOMPLET                                         */
@@ -206,6 +238,9 @@ RemiseComplet.idArticle,
 RemiseComplet.idGratuit,
 RemiseComplet.nbMin,
 RemiseComplet.nbGratuit,
+RemiseComplet.IDGRATUITPOURCENTAGE,
+RemiseComplet.NBMINPRC,
+RemiseComplet.prc,
 ArticleEtStock.designation,
 ArticleEtStock.code,
 ArticleEtStock.quantiteStock,
@@ -226,8 +261,11 @@ ArticleComplet.prixUnitaire,
 ArticleComplet.pourcentage,
 ArticleComplet.idPourcentage,
 ArticleComplet.idGratuit,
-ArticleComplet.nbMin,
 ArticleComplet.nbGratuit,
+ArticleComplet.IDGRATUITPOURCENTAGE,
+ArticleComplet.nbMin,
+ArticleComplet.NBMINPRC,
+ArticleComplet.prc,
 Achat.idAchat,
 Achat.dateAchat,
 Achat.quantiteProd,
@@ -251,13 +289,16 @@ AchatComplet.idPourcentage,
 AchatComplet.idGratuit,
 AchatComplet.nbMin,
 AchatComplet.nbGratuit,
+AchatComplet.IDGRATUITPOURCENTAGE,
+AchatComplet.NBMINPRC,
+AchatComplet.prc,
 AchatComplet.idAchat,
 AchatComplet.dateAchat,
 AchatComplet.quantiteProd,
 AchatComplet.prixSansRemise,
 AchatComplet.etat,
 TicketAchat.idTicket,
-TicketAchat.prixAvecRemise
+TicketAchat.prixtotalachat as prixavecremise
 FROM AchatComplet JOIN TicketAchat ON AchatComplet.idAchat = TicketAchat.idAchat;
 
 /*==============================================================*/
@@ -275,6 +316,9 @@ TicketAchatComplet.idPourcentage,
 TicketAchatComplet.idGratuit,
 TicketAchatComplet.nbMin,
 TicketAchatComplet.nbGratuit,
+TicketAchatComplet.IDGRATUITPOURCENTAGE,
+TicketAchatComplet.NBMINPRC,
+TicketAchatComplet.prc,
 TicketAchatComplet.idAchat,
 TicketAchatComplet.dateAchat,
 TicketAchatComplet.quantiteProd,
@@ -306,6 +350,11 @@ alter table REMISE
       references POURCENTAGE (IDPOURCENTAGE)
       on delete restrict on update restrict;
 
+alter table REMISE
+   add constraint FK_REMISE_REFERENCE_GRATUITPOURCENTAGE foreign key (IDGRATUITPOURCENTAGE)
+      references GRATUITPOURCENTAGE (IDGRATUITPOURCENTAGE)
+      on delete restrict on update restrict;
+
 alter table STOCKARTICLE
    add constraint FK_STOCKART_REFERENCE_ARTICLE foreign key (IDARTICLE)
       references ARTICLE (IDARTICLE)
@@ -331,11 +380,16 @@ CREATE SEQUENCE gratuit_seq;
 CREATE SEQUENCE remise_seq;
 CREATE SEQUENCE achat_seq;
 CREATE SEQUENCE ticket_seq;
+CREATE SEQUENCE gratuitpourcentage_seq;
 
 INSERT INTO ADMIN (IDADMIN,EMAIL,MDP) VALUES (CONCAT('AD',lpad(nextval('admin_seq')::text,2,'0')),'toky@gmail.com','toky');
 
 INSERT INTO POURCENTAGE (IDPOURCENTAGE,POURCENTAGE) VALUES (CONCAT('PRC',lpad(nextval('pourcentage_seq')::text,2,'0')),0);
 INSERT INTO GRATUIT (IDGRATUIT,NBMIN,NBGRATUIT) VALUES (CONCAT('GRT',lpad(nextval('gratuit_seq')::text,2,'0')),1,0);
+INSERT INTO GRATUITPOURCENTAGE (IDGRATUITPOURCENTAGE,NBMINPRC,prc) VALUES (CONCAT('GRP',lpad(nextval('gratuitpourcentage_seq')::text,2,'0')),1,0);
+
+INSERT INTO GRATUITPOURCENTAGE (IDGRATUITPOURCENTAGE,NBMINPRC,prc) VALUES (CONCAT('GRP',lpad(nextval('gratuitpourcentage_seq')::text,2,'0')),2,50);
+
 
 INSERT INTO UTILISATEUR (IDUTIL,NOM,PRENOM,DATENAISS,EMAIL,SEXE,MDP) VALUES (CONCAT('UT',lpad(nextval('utilisateur_seq')::text,2,'0')),'Rakoto','Njiva','01-01-1999','njiva@yahoo.com','Homme','njiva');
 INSERT INTO UTILISATEUR (IDUTIL,NOM,PRENOM,DATENAISS,EMAIL,SEXE,MDP) VALUES (CONCAT('UT',lpad(nextval('utilisateur_seq')::text,2,'0')),'Rabe','Soa','01-09-1998','soa@yahoo.com','Femme','soa');
@@ -370,13 +424,13 @@ INSERT INTO GRATUIT (IDGRATUIT,NBMIN,NBGRATUIT) VALUES (CONCAT('GRT',lpad(nextva
 INSERT INTO GRATUIT (IDGRATUIT,NBMIN,NBGRATUIT) VALUES (CONCAT('GRT',lpad(nextval('gratuit_seq')::text,2,'0')),2,4);
 INSERT INTO GRATUIT (IDGRATUIT,NBMIN,NBGRATUIT) VALUES (CONCAT('GRT',lpad(nextval('gratuit_seq')::text,2,'0')),2,2);
 
-INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE) VALUES ('ART01','GRT01','PRC01');
-INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE) VALUES ('ART02','GRT02','PRC04');
-INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE) VALUES ('ART03','GRT03','PRC02');
-INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE) VALUES ('ART04','GRT04','PRC03');
-INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE) VALUES ('ART05','GRT03','PRC03');
-INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE) VALUES ('ART06','GRT02','PRC02');
-INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE) VALUES ('ART07','GRT01','PRC01');
+INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE,IDGRATUITPOURCENTAGE) VALUES ('ART01','GRT01','PRC01','GRP02');
+INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE,IDGRATUITPOURCENTAGE) VALUES ('ART02','GRT02','PRC04','GRP01');
+INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE,IDGRATUITPOURCENTAGE) VALUES ('ART03','GRT03','PRC02','GRP01');
+INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE,IDGRATUITPOURCENTAGE) VALUES ('ART04','GRT04','PRC03','GRP01');
+INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE,IDGRATUITPOURCENTAGE) VALUES ('ART05','GRT03','PRC03','GRP01');
+INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE,IDGRATUITPOURCENTAGE) VALUES ('ART06','GRT02','PRC02','GRP01');
+INSERT INTO REMISE (IDARTICLE,IDGRATUIT,IDPOURCENTAGE,IDGRATUITPOURCENTAGE) VALUES ('ART07','GRT01','PRC01','GRP01');
 
 INSERT INTO ACHAT (IDACHAT,IDARTICLE,DATEACHAT,QUANTITEPROD,PRIXTOTAL,ETAT) VALUES (CONCAT('ACH',lpad(nextval('achat_seq')::text,2,'0')),'ART01','22-10-2020',3,2200,1);
 INSERT INTO ACHAT (IDACHAT,IDARTICLE,DATEACHAT,QUANTITEPROD,PRIXTOTAL,ETAT) VALUES (CONCAT('ACH',lpad(nextval('achat_seq')::text,2,'0')),'ART02','22-10-2020',4,4000,1);
