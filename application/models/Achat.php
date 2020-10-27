@@ -82,6 +82,9 @@
                     throw new Exception("Aucun article ne correspond a ce code");
                 }
 
+                if(sizeof($this->Achat->selectCode($code)) > 0){
+                    throw new Exception("Veuiller d'abord valider l'achat precedent de cet article");
+                }
                 $idArticle = $article[0]["idarticle"];
                 $this->Article->ifStockDispo($idArticle,$quantite);
                 $identifiant = 'ACH';
@@ -107,6 +110,13 @@
             catch(Exception $ex){
                 throw $ex;
             }
+        }
+
+        public function selectCode($code){
+            $sql = "SELECT * from achatcomplet WHERE code like '".$code."' AND etat = 1 ";
+            $res = $this->db->query($sql);
+            $result = $res->result_array();
+            return $result;
         }
 
         public function modifier($idutil,$mdp){
