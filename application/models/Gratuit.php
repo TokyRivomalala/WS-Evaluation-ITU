@@ -79,10 +79,10 @@
                     throw new Exception("Veuiller remplir le formulaire.");
                 }
                 if($nbMin <= 0 ){
-                    throw new Exception("Nombre Minimum invalide");
+                    throw new Exception("Nombre Achete invalide");
                 }
                 if($nbGratuit <= 0 ){
-                    throw new Exception("Nombre Bonus invalide");
+                    throw new Exception("Nombre Offert invalide");
                 }
                 $ifGrtExist = sizeof($this->Gratuit->select($nbMin,$nbGratuit));
                 if($ifGrtExist > 0){
