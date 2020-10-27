@@ -80,9 +80,10 @@
 
         public function modifier(){
             try{
-                $idutil = $this->input->post('idutil');
-                $mdp = $this->input->post('mdp');
-                $res = $this->Utilisateur->modifier($idutil,$mdp);
+                $idArticle = $this->input->post('idarticle');
+                $idPourcentage = $this->input->post('idpourcentage');
+                $idGratuit = $this->input->post('idgratuit');
+                $res = $this->Promotion->modifier($idArticle,$idPourcentage,$idGratuit);
                 echo $res;
             }catch(Exception $ex){
                 $erreur = array(

@@ -83,22 +83,31 @@
             }
         }
 
-        public function modifier($idutil,$mdp){
+        public function modifier($idArticle,$idPourcentage,$idGratuit){
             try{
                 $util = $this->Admin->checkToken();
-                if($this->Fonction->IsNullOrEmptyString($mdp) || $this->Fonction->IsNullOrEmptyString($idutil)){
+                if($this->Fonction->IsNullOrEmptyString($idArticle) || $this->Fonction->IsNullOrEmptyString($idPourcentage) || $this->Fonction->IsNullOrEmptyString($idGratuit)){
                     throw new Exception("Veuiller remplir le formulaire.");
                 }
                 else{
-                    $this->db->set('mdp', $mdp);
-                    $this->db->where('idutil', $idutil);
-                    $this->db->update('utilisateur');
+                    if(sizeof($this->Pourcentage->selectById($idPourcentage)) == 0){
+                        throw new Exception("Veuiller verifier votre pourcentage.");
+                    }
+                    if(sizeof($this->Gratuit->selectById($idGratuit)) == 0){
+                        throw new Exception("Veuiller verifier votre gratuite.");
+                    }
+
+                    $this->db->set('idpourcentage', $idPourcentage);
+                    $this->db->set('idgratuit', $idGratuit);
+                    $this->db->where('idarticle', $idArticle);
+                    $this->db->update('remise');
 
                     $res = array (
-                        'idutil' => $idutil,
-                        'mdp' => $mdp
+                        'idarticle' => $idArticle,
+                        'idpourcentage' => $idPourcentage,
+                        'idgratuit' => $idGratuit
                     );
-                    return $this->Fonction->toJson('success',$res,'Utilisateur modifie');
+                    return $this->Fonction->toJson('success',$res,'Remise modifie');
                 }
             }catch(Exception $ex){
                 throw $ex;

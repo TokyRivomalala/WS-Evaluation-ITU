@@ -72,6 +72,13 @@
             return $result;
         }
 
+        public function selectById($idPourcentage){
+            $sql = "SELECT * from pourcentage WHERE idpourcentage like '".$idPourcentage."'";
+            $res = $this->db->query($sql);
+            $result = $res->result_array();
+            return $result;
+        }
+
         public function nouveau($pourcentage){
             try{
                 $util = $this->Admin->checkToken();

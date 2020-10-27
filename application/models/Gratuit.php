@@ -107,6 +107,13 @@
             }
         }
 
+        public function selectById($idGratuit){
+            $sql = "SELECT * from gratuit WHERE idgratuit like '".$idGratuit."'";
+            $res = $this->db->query($sql);
+            $result = $res->result_array();
+            return $result;
+        }
+
         public function modifier($idutil,$mdp){
             try{
                 $util = $this->Admin->checkToken();
